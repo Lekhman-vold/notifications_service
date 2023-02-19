@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from pydantic import validator
@@ -8,10 +10,11 @@ from validate_email import validate_email
 app = FastAPI()
 
 
-class EmailModel(BaseModel):
+class SendEmailModel(BaseModel):
     message_type: str
     from_email: str
     to_email: str
+    html: Optional[str] = None
 
     @validator('from_email', 'to_email')
     def validate_email(cls, value):
@@ -21,7 +24,7 @@ class EmailModel(BaseModel):
 
 
 @app.post("/send-email/", status_code=status.HTTP_200_OK)
-async def sender(schema: EmailModel):
+async def sender(schema: SendEmailModel):
     schema = schema.dict()
-    # TODO: implement email sending logic
+    ## TODO: implement email sending logic
     return schema
