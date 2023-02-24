@@ -1,30 +1,27 @@
-from typing import Optional
-
+import logging
 from fastapi import FastAPI
-from pydantic import BaseModel
-from pydantic import validator
 
-from starlette import status
-from validate_email import validate_email
+from core import router
+from core.settings import get_settings
 
-app = FastAPI()
+settings = get_settings()
 
 
-class SendEmailModel(BaseModel):
-    message_type: str
-    from_email: str
-    to_email: str
-    html: Optional[str] = None
-
-    @validator('from_email', 'to_email')
-    def validate_email(cls, value):
-        if not validate_email(value):
-            raise ValueError('email is not valid')
-        return value
+def get_logger(name):
+	logger = logging.getLogger(name)
+	return logger
 
 
-@app.post("/send-email/", status_code=status.HTTP_200_OK)
-async def sender(schema: SendEmailModel):
-    schema = schema.dict()
-    ## TODO: implement email sending logic
-    return schema
+def create_api_app(dependency_overrides=None, logger=get_logger("api")):
+	app = FastAPI(logging=logger)
+
+	if dependency_overrides:
+		app.dependency_overrides.update(dependency_overrides)
+
+	router.init(app)
+
+	logger.info("started api service")
+	return app
+
+
+app = create_api_app()
